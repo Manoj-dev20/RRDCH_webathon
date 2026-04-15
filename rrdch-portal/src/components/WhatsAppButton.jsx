@@ -12,7 +12,8 @@ export default function WhatsAppButton({
   // Generate bilingual WhatsApp message as per Feature 3 spec
   const generateWhatsAppMessage = () => {
     // Clean phone number - remove leading zero if present
-    const cleanPhone = phone.startsWith('0') ? phone.slice(1) : phone;
+    const safePhone = phone || '';
+    const cleanPhone = safePhone.startsWith('0') ? safePhone.slice(1) : safePhone;
     
     const english = `*RRDCH Appointment Reminder*
 
@@ -43,7 +44,8 @@ Please arrive 10 minutes early with a valid ID.
   };
 
   // Clean phone for wa.me URL (must include country code, without +)
-  const cleanPhoneForUrl = phone.startsWith('0') ? phone.slice(1) : phone;
+  const safePhone = phone || '';
+  const cleanPhoneForUrl = safePhone.startsWith('0') ? safePhone.slice(1) : safePhone;
   const whatsappUrl = `https://wa.me/91${cleanPhoneForUrl}?text=${generateWhatsAppMessage()}`;
 
   return (
