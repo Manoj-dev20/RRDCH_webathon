@@ -315,28 +315,38 @@ export default function FollowUp() {
                 {/* Analysis Results */}
                 {prescriptionResult && (
                   <div className="space-y-4">
-                    {/* Empty Result Fallback */}
-                    {!prescriptionResult.medicines?.length && !prescriptionResult.instructions && !prescriptionResult.doctorName && (
-                      <div className="text-center py-6 px-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                        <p className="text-sm text-gray-500">
-                          {lang === 'kn' ? 'ಕ್ಷಮಿಸಿ, ಈ ಚಿತ್ರದಲ್ಲಿ ದತ್ತಾಂಶವನ್ನು ಕಂಡುಹಿಡಿಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾದ ಫೋಟೋವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.' : 'Sorry, could not find any readable data in this image. Please try a clearer photo.'}
+                    {/* Error or Empty Result Fallback */}
+                    {(prescriptionResult.error || (!prescriptionResult.medicines?.length && !prescriptionResult.instructions && !prescriptionResult.doctorName)) && (
+                      <div className="text-center py-6 px-4 bg-orange-50 rounded-xl border border-dashed border-orange-300">
+                        <p className="text-sm text-orange-800 font-medium mb-1">
+                          {lang === 'kn' ? 'ಮಾಹಿತಿ ಲಭ್ಯವಿಲ್ಲ' : 'No Data Found'}
                         </p>
+                        <p className="text-xs text-orange-600">
+                          {lang === 'kn' 
+                            ? 'ಕ್ಷಮಿಸಿ, ಈ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾದ ಫೋಟೋ ಬಳಸಿ.' 
+                            : 'We could not reliably extract medicines from this image. Please ensure the photo is clear and well-lit.'}
+                        </p>
+                        {prescriptionResult.raw && (
+                          <div className="mt-4 p-2 bg-white/50 rounded text-[10px] text-gray-400 text-left max-h-24 overflow-auto font-mono">
+                            AI RAW: {typeof prescriptionResult.raw === 'string' ? prescriptionResult.raw.substring(0, 200) : JSON.stringify(prescriptionResult.raw).substring(0, 200)}...
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {/* Medicines Section */}
-                    {prescriptionResult.medicines && prescriptionResult.medicines.length > 0 && (
+                    {Array.isArray(prescriptionResult.medicines) && prescriptionResult.medicines.length > 0 && (
                       <div className="bg-[var(--surface)] rounded-lg p-4">
                         <h4 className="font-semibold text-[var(--primary)] mb-3">
                           {lang === 'kn' ? '💊 ಔಷಧಿಗಳು' : '💊 Medicines'}
                         </h4>
                         <ul className="space-y-2">
-                          {prescriptionResult.medicines.map((med, idx) => (
+                          {prescriptionResult.medicines.map((med: any, idx) => (
                             <li key={idx} className="text-sm text-[var(--text2)] p-3 bg-white rounded-lg border-l-4 border-[var(--accent)] shadow-sm">
-                              <div className="font-bold text-[var(--primary)]">{med.name}</div>
-                              {med.dosage && med.frequency && (
+                              <div className="font-bold text-[var(--primary)]">{typeof med === 'string' ? med : med.name}</div>
+                              {typeof med !== 'string' && (med.dosage || med.frequency) && (
                                 <div className="text-xs text-[var(--text3)] mt-1">
-                                  {med.dosage} • {med.frequency}
+                                  {med.dosage} {med.dosage && med.frequency && '•'} {med.frequency}
                                 </div>
                               )}
                             </li>

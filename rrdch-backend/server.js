@@ -62,12 +62,21 @@ app.post('/api/triage', async (req, res) => {
     })
 
     const data = await response.json()
-
     const content = data?.choices?.[0]?.message?.content || "{}"
 
-    const parsed = JSON.parse(
-      content.replace(/```json|```/g, '').trim()
-    )
+    // Robust JSON extraction
+    let parsed = {}
+    try {
+      const start = content.indexOf('{')
+      const end = content.lastIndexOf('}')
+      if (start !== -1 && end !== -1) {
+        parsed = JSON.parse(content.substring(start, end + 1))
+      } else {
+        parsed = JSON.parse(content.replace(/```json|```/g, '').trim())
+      }
+    } catch (e) {
+      parsed = { error: 'Parse failed', raw: content }
+    }
 
     res.json(parsed)
 
@@ -123,12 +132,29 @@ app.post('/api/prescription', async (req, res) => {
     })
 
     const data = await response.json()
-
     const content = data?.choices?.[0]?.message?.content || "{}"
 
-    const parsed = JSON.parse(
-      content.replace(/```json|```/g, '').trim()
-    )
+    console.log('--- AI RAW CONTENT START ---')
+    console.log(content)
+    console.log('--- AI RAW CONTENT END ---')
+
+    let parsed = {}
+    try {
+      const start = content.indexOf('{')
+      const end = content.lastIndexOf('}')
+      if (start !== -1 && end !== -1) {
+        parsed = JSON.parse(content.substring(start, end + 1))
+      } else {
+        parsed = JSON.parse(content.replace(/```json|```/g, '').trim())
+      }
+    } catch (e) {
+      console.error('Prescription Parse Error:', e)
+      try {
+        parsed = JSON.parse(content.replace(/```json|```/g, '').trim())
+      } catch (e2) {
+        parsed = { error: "Parse failure", raw: content }
+      }
+    }
 
     res.json(parsed)
 
