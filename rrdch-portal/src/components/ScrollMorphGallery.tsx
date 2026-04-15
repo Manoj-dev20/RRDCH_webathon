@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { motion, useTransform, useSpring, useMotionValue } from "framer-motion";
+import { motion, useTransform, useSpring, useMotionValue, useScroll } from "framer-motion";
 
 export type AnimationPhase = "scatter" | "line" | "circle" | "bottom-strip";
 
@@ -108,36 +108,12 @@ export default function ScrollMorphGallery() {
     return () => observer.disconnect();
   }, []);
 
-  const virtualScroll = useMotionValue(0);
-  const scrollRef = useRef(0);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start 90%", "end start"]
+  });
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const handleWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const newScroll = Math.min(Math.max(scrollRef.current + e.deltaY, 0), MAX_SCROLL);
-      scrollRef.current = newScroll;
-      virtualScroll.set(newScroll);
-    };
-    let touchStartY = 0;
-    const handleTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0].clientY; };
-    const handleTouchMove = (e: TouchEvent) => {
-      const deltaY = touchStartY - e.touches[0].clientY;
-      touchStartY = e.touches[0].clientY;
-      const newScroll = Math.min(Math.max(scrollRef.current + deltaY, 0), MAX_SCROLL);
-      scrollRef.current = newScroll;
-      virtualScroll.set(newScroll);
-    };
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    container.addEventListener("touchstart", handleTouchStart, { passive: false });
-    container.addEventListener("touchmove", handleTouchMove, { passive: false });
-    return () => {
-      container.removeEventListener("wheel", handleWheel);
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchmove", handleTouchMove);
-    };
-  }, [virtualScroll]);
+  const virtualScroll = useTransform(scrollYProgress, [0, 1], [0, MAX_SCROLL]);
 
   const morphProgress = useTransform(virtualScroll, [0, 600], [0, 1]);
   const smoothMorph = useSpring(morphProgress, { stiffness: 40, damping: 20 });
@@ -219,7 +195,7 @@ export default function ScrollMorphGallery() {
         </p>
       </div>
 
-      {/* The scroll animation container — fixed height, captures scroll internally */}
+      {/* The scroll animation container — driven by page scroll now */}
       <div
         ref={containerRef}
         style={{
@@ -228,7 +204,6 @@ export default function ScrollMorphGallery() {
           height: '600px',
           background: '#FAFAFA',
           overflow: 'hidden',
-          cursor: 'grab',
         }}
       >
         <div style={{ display: 'flex', height: '100%', width: '100%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
