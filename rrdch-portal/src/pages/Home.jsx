@@ -299,47 +299,8 @@ export default function Home() {
       {/* Element 2: Scroll Morph Photo Gallery */}
       <ScrollMorphGallery />
 
-      {/* Virtual Tour Section */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="font-heading font-semibold text-2xl md:text-3xl text-primary mb-4"
-            >
-              {lang === 'kn' ? 'ನಮ್ಮ ಕ್ಯಾಂಪಸ್ ವೀಕ್ಷಿಸಿ' : 'Experience Our Campus in 360°'}
-            </motion.h2>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-              className="text-text-secondary max-w-2xl mx-auto"
-            >
-              {lang === 'kn' 
-                ? 'ನಮ್ಮ ವಿಶ್ವದರ್ಜೆಯ ಸೌಲಭ್ಯಗಳು ಮತ್ತು ಕ್ಯಾಂಪಸ್ ಅನ್ನು ನಿಮ್ಮ ಮನೆಯಿಂದಲೇ ಅನ್ವೇಷಿಸಿ'
-                : 'Explore our world-class facilities and campus environment from the comfort of your home with our immersive virtual tour.'}
-            </motion.p>
-          </div>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
-            className="relative w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border-8 border-white bg-white/50 backdrop-blur-sm"
-          >
-            <iframe 
-              src="https://www.easytourz.com/vH-ImaBadTour/all/2e5288684201ca03" 
-              className="absolute inset-0 w-full h-full"
-              frameBorder="0" 
-              allowFullScreen
-              title="RRDCH Campus Virtual Tour"
-            />
-          </motion.div>
-        </div>
-      </section>
+      {/* Element 3: Interactive Image Selector */}
+      <RRDCHGallerySelector />
 
       {/* Two Path Cards */}
       <section className="py-12 bg-surface">
