@@ -105,9 +105,17 @@ app.post('/api/prescription', async (req, res) => {
             { type: 'image_url', image_url: { url: image } },
             {
               type: 'text',
-              text: `Extract all prescription information. Return ONLY valid JSON (no markdown):
+              text: `You are an expert pharmacist extracting data from a medical prescription.
+                Extract: 
+                - medicines: an array of objects with 'name', 'dosage', and 'frequency'.
+                - instructions: any general advice or timing (e.g., 'after food').
+                - follow_up: any mention of next visit.
+                - doctorName: name of the doctor if visible.
+                - notes: any other important info.
+                Return ONLY valid JSON:
                 { "medicines": [{ "name": string, "dosage": string, "frequency": string }],
-                  "instructions": string, "follow_up": string, "department": string, "notes": string }`
+                  "instructions": string, "follow_up": string, "doctorName": string, "notes": string }
+                If something is unreadable, use "Unreadable". If missing, use null.`
             }
           ]
         }]
