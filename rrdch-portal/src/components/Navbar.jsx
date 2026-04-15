@@ -88,16 +88,12 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-lg"
-              >
-                <span className="text-white font-bold text-lg">R</span>
-              </motion.div>
-              <div className="hidden sm:block">
-                <span className="font-heading font-semibold text-primary text-lg">RRDCH</span>
-              </div>
+            <Link to="/" className="flex items-center gap-2 group py-1">
+              <img 
+                src="/logo.png" 
+                alt="RajaRajeswari Dental College & Hospital" 
+                className="h-12 w-auto object-contain transition-transform group-hover:scale-105"
+              />
             </Link>
 
             {/* Desktop Navigation */}
