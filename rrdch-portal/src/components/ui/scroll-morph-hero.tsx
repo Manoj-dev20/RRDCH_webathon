@@ -87,26 +87,26 @@ const TOTAL_IMAGES = 20;
 const MAX_SCROLL = 3000;
 
 const IMAGES = [
-    "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1598256989800-fea5a02ecf04?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1590664095641-7fa05f689813?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1584308666744-24d5c474f2ad?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1583324113626-70df0f4deaab?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1600170311833-c2cf5280ce49?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=300&q=80",
-    "https://images.unsplash.com/photo-1563213126-a4273aed2016?auto=format&fit=crop&w=300&q=80",
+    "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=300&q=80", // Dental exam
+    "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=300&q=80", // Medical equipment
+    "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=300&q=80", // Dental chair
+    "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?auto=format&fit=crop&w=300&q=80", // Doctor working
+    "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=300&q=80", // Physician
+    "https://images.unsplash.com/photo-1590664095641-7fa05f689813?auto=format&fit=crop&w=300&q=80", // Microscope
+    "https://images.unsplash.com/photo-1588776814202-16a287940176?auto=format&fit=crop&w=300&q=80", // Dental clinic
+    "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=300&q=80", // Patient care
+    "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=300&q=80", // Medical lab
+    "https://images.unsplash.com/photo-1598256989800-fea5a02ecf04?auto=format&fit=crop&w=300&q=80", // Dental surgery
+    "https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=300&q=80", // Modern hospital
+    "https://images.unsplash.com/photo-1563213126-a4273aed2016?auto=format&fit=crop&w=300&q=80", // Surgical room
+    "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=300&q=80", // Dental instrument
+    "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?auto=format&fit=crop&w=300&q=80", // MRI/Scanner
+    "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=300&q=80", // Health professional
+    "https://images.unsplash.com/photo-1600170311833-c2cf5280ce49?auto=format&fit=crop&w=300&q=80", // Waiting area
+    "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=300&q=80", // Hospital hallway
+    "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=300&q=80", // Medical center
+    "https://images.unsplash.com/photo-1527613426441-4da17471b66d?auto=format&fit=crop&w=300&q=80", // Stethoscope
+    "https://images.unsplash.com/photo-1540339832862-47459980783f?auto=format&fit=crop&w=300&q=80", // Dental model
 ];
 
 const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
