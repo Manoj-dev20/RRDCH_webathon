@@ -116,6 +116,23 @@ export default function DoctorDashboard() {
     }
   }
 
+  // Call next patient when queue is idle
+  const callNextPatient = async () => {
+    if (waitingPatients.length === 0) return
+    const [nextTokenId] = waitingPatients[0]
+    
+    try {
+      const updates: Record<string, any> = {
+        [`queues/${selectedDept}/currentToken`]: nextTokenId,
+        [`queues/${selectedDept}/patients/${nextTokenId}/status`]: 'serving',
+        [`queues/${selectedDept}/lastUpdated`]: new Date().toISOString(),
+      }
+      await update(ref(db), updates)
+    } catch (err) {
+      console.error('Error calling next patient:', err)
+    }
+  }
+
   // Get current patient being served
   const currentPatient = currentToken && patients[currentToken] ? { token: currentToken, ...patients[currentToken] } : null
   
@@ -252,10 +269,28 @@ export default function DoctorDashboard() {
               </div>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-[var(--border)] p-8 text-center">
-              <p className="text-[var(--text2)]">
-                {lang === 'kn' ? 'ಯಾವುದೇ ರೋಗಿಗಳು ಕಾಯುತ್ತಿಲ್ಲ' : 'No patients waiting'}
-              </p>
+            <div className="bg-white rounded-2xl border border-[var(--border)] p-8 text-center shadow-sm">
+              <div className="max-w-md mx-auto">
+                <Users className="w-12 h-12 text-[var(--text3)] mx-auto mb-4 opacity-50" />
+                <p className="text-[var(--text)] font-semibold text-lg mb-1">
+                  {lang === 'kn' ? 'ಯಾವುದೇ ರೋಗಿಗಳು ಸೇವೆ ಪಡೆಯುತ್ತಿಲ್ಲ' : 'No patient being served'}
+                </p>
+                <p className="text-[var(--text2)] text-sm mb-6">
+                  {waitingPatients.length > 0
+                    ? (lang === 'kn' ? `${waitingPatients.length} ರೋಗಿಗಳು ಕಾಯುತ್ತಿದ್ದಾರೆ` : `${waitingPatients.length} patients are currently in the waiting list.`)
+                    : (lang === 'kn' ? 'ಯಾವುದೇ ರೋಗಿಗಳು ಕಾಯುತ್ತಿಲ್ಲ' : 'The waiting list is currently empty.')}
+                </p>
+                
+                {waitingPatients.length > 0 && (
+                  <button
+                    onClick={callNextPatient}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
+                  >
+                    <Activity size={20} />
+                    {lang === 'kn' ? 'ಮುಂದಿನ ರೋಗಿಯನ್ನು ಕರೆ ಮಾಡಿ' : `Start Serving Next Patient (${waitingPatients[0][0]})`}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </motion.div>

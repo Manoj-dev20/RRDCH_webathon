@@ -69,32 +69,33 @@ const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * 
 
 // RRDCH-themed dental/medical images from Unsplash
 const IMAGES = [
-  "https://images.unsplash.com/photo-1629909615184-74f495363b67?w=300&q=80",
-  "https://images.unsplash.com/photo-1588776814546-1ffbb172f6fb?w=300&q=80",
-  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=300&q=80",
-  "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&q=80",
-  "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=300&q=80",
-  "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=300&q=80",
-  "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=300&q=80",
-  "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=300&q=80",
-  "https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=300&q=80",
-  "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=300&q=80",
-  "https://images.unsplash.com/photo-1584515933487-779824d29309?w=300&q=80",
-  "https://images.unsplash.com/photo-1631815589968-fdb09a223b1e?w=300&q=80",
-  "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?w=300&q=80",
-  "https://images.unsplash.com/photo-1588776813677-77aef5595b83?w=300&q=80",
-  "https://images.unsplash.com/photo-1601814933824-fd0b574dd592?w=300&q=80",
-  "https://images.unsplash.com/photo-1571772996211-2f02c9727629?w=300&q=80",
-  "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&q=80",
-  "https://images.unsplash.com/photo-1530026186672-2cd00ffc50fe?w=300&q=80",
-  "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=300&q=80",
-  "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=300&q=80",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/building.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Chairman.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Auditoruim-1.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Clinic-1.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Library-1.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Hostel-2.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Cafeteria-1.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Classroom-1.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Clinic-2.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Lab.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2023/12/rrdch-campus-view.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Oral-Medicine.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Bus.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Gym.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Reception.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Group.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Campus-Night.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Dental-Chair.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2022/11/RRDCH-Accreditation.jpg",
+  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Sports.jpg",
 ];
 
 export default function ScrollMorphGallery() {
   const [introPhase, setIntroPhase] = useState<AnimationPhase>("scatter");
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -108,17 +109,21 @@ export default function ScrollMorphGallery() {
     return () => observer.disconnect();
   }, []);
 
+  // FIXED: Trigger on the outer section, but offset so the animation happens while sticky
   const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start 90%", "end start"]
+    target: sectionRef,
+    offset: ["start start", "end end"]
   });
 
   const virtualScroll = useTransform(scrollYProgress, [0, 1], [0, MAX_SCROLL]);
 
-  const morphProgress = useTransform(virtualScroll, [0, 600], [0, 1]);
+  const morphProgress = useTransform(virtualScroll, [0, 1000], [0, 1]);
   const smoothMorph = useSpring(morphProgress, { stiffness: 40, damping: 20 });
-  const scrollRotate = useTransform(virtualScroll, [600, 3000], [0, 360]);
+  
+  // Rotate during the middle phase of the scroll
+  const scrollRotate = useTransform(virtualScroll, [1000, 3000], [0, 180]);
   const smoothScrollRotate = useSpring(scrollRotate, { stiffness: 40, damping: 20 });
+  
   const mouseX = useMotionValue(0);
   const smoothMouseX = useSpring(mouseX, { stiffness: 30, damping: 20 });
 
@@ -127,24 +132,26 @@ export default function ScrollMorphGallery() {
     if (!container) return;
     const handleMouseMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
-      mouseX.set((((e.clientX - rect.left) / rect.width) * 2 - 1) * 100);
+      const relativeX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouseX.set(relativeX * 100);
     };
     container.addEventListener("mousemove", handleMouseMove);
     return () => container.removeEventListener("mousemove", handleMouseMove);
   }, [mouseX]);
 
   useEffect(() => {
+    // Initial intro animation state
     const t1 = setTimeout(() => setIntroPhase("line"), 500);
-    const t2 = setTimeout(() => setIntroPhase("circle"), 2500);
+    const t2 = setTimeout(() => setIntroPhase("circle"), 2000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   const scatterPositions = useMemo(() =>
     IMAGES.map(() => ({
-      x: (Math.random() - 0.5) * 1500,
-      y: (Math.random() - 0.5) * 1000,
-      rotation: (Math.random() - 0.5) * 180,
-      scale: 0.6,
+      x: (Math.random() - 0.5) * 2000,
+      y: (Math.random() - 0.5) * 1500,
+      rotation: (Math.random() - 0.5) * 360,
+      scale: 0.5,
       opacity: 0,
     })), []);
 
@@ -159,151 +166,100 @@ export default function ScrollMorphGallery() {
     return () => { u1(); u2(); u3(); };
   }, [smoothMorph, smoothScrollRotate, smoothMouseX]);
 
-  const contentOpacity = useTransform(smoothMorph, [0.8, 1], [0, 1]);
-  const contentY = useTransform(smoothMorph, [0.8, 1], [20, 0]);
+  const contentOpacity = useTransform(smoothMorph, [0.7, 0.9], [0, 1]);
+  const contentY = useTransform(smoothMorph, [0.7, 0.9], [40, 0]);
 
   return (
-    // WRAPPER: full section with background matching the homepage surface color
-    <section style={{
-      background: 'var(--surface)',
-      padding: '96px 0',
-      position: 'relative',
-    }}>
-      {/* Section header above the animation */}
-      <div style={{ textAlign: 'center', marginBottom: '48px', padding: '0 24px' }}>
-        <div style={{
-          fontSize: '12px',
-          fontWeight: '700',
-          letterSpacing: '2px',
-          textTransform: 'uppercase',
-          color: 'var(--accent)',
-          marginBottom: '12px'
-        }}>
-          Campus & Facilities
-        </div>
-        <h2 style={{
-          fontFamily: 'var(--font-head)',
-          fontSize: 'clamp(28px, 4vw, 44px)',
-          fontWeight: '800',
-          color: 'var(--primary)',
-          marginBottom: '12px'
-        }}>
-          Life at RRDCH
-        </h2>
-        <p style={{ fontSize: '16px', color: 'var(--text2)', maxWidth: '500px', margin: '0 auto' }}>
-          Scroll to explore our campus, facilities, and 30+ years of dental excellence.
-        </p>
-      </div>
+    <section 
+      ref={sectionRef} 
+      className="relative" 
+      style={{ height: '400vh', background: 'var(--surface)' }}
+    >
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex flex-col items-center justify-center">
+        
+        {/* Header content that sticks at the top */}
+        <motion.div 
+          style={{ 
+            opacity: useTransform(scrollYProgress, [0, 0.1], [1, 0]),
+            y: useTransform(scrollYProgress, [0, 0.1], [0, -20])
+          }}
+          className="absolute top-24 z-20 text-center px-6"
+        >
+          <div className="text-[var(--accent)] text-xs font-bold tracking-[0.3em] uppercase mb-4">
+            Legacy of Excellence
+          </div>
+          <h2 className="text-[var(--primary)] text-4xl md:text-6xl font-heading font-extrabold mb-4">
+            Life at RRDCH
+          </h2>
+          <p className="text-[var(--text2)] max-w-lg mx-auto">
+            Scroll to experience our state-of-the-art campus and 30+ year journey.
+          </p>
+        </motion.div>
 
-      {/* The scroll animation container — driven by page scroll now */}
-      <div
-        ref={containerRef}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '600px',
-          background: '#FAFAFA',
-          overflow: 'hidden',
-        }}
-      >
-        <div style={{ display: 'flex', height: '100%', width: '100%', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-
-          {/* Intro text that fades out as scroll begins */}
-          <div style={{
-            position: 'absolute',
-            zIndex: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: 'center',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none'
-          }}>
-            <motion.h1
-              initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-              animate={introPhase === "circle" && morphValue < 0.5
-                ? { opacity: 1 - morphValue * 2, y: 0, filter: "blur(0px)" }
-                : { opacity: 0, filter: "blur(10px)" }}
-              transition={{ duration: 1 }}
-              style={{
-                fontFamily: 'var(--font-head)',
-                fontSize: 'clamp(20px, 3vw, 32px)',
-                fontWeight: '700',
-                color: 'var(--primary)',
-              }}
-            >
-              Explore RRDCH
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={introPhase === "circle" && morphValue < 0.5
-                ? { opacity: 0.5 - morphValue }
-                : { opacity: 0 }}
-              transition={{ duration: 1, delay: 0.2 }}
-              style={{ marginTop: '12px', fontSize: '11px', fontWeight: '700', letterSpacing: '0.2em', color: 'var(--text2)' }}
-            >
-              SCROLL TO EXPLORE
-            </motion.p>
+        {/* The animation container */}
+        <div
+          ref={containerRef}
+          className="relative w-full h-full flex items-center justify-center"
+        >
+          {/* Background Text */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 select-none overflow-hidden">
+            <span className="text-[25vw] font-black text-[var(--primary)] whitespace-nowrap">
+              R R D C H
+            </span>
           </div>
 
-          {/* Content that fades in after arc forms */}
-          <motion.div
-            style={{ opacity: contentOpacity, y: contentY, position: 'absolute', top: '8%', zIndex: 10, textAlign: 'center', pointerEvents: 'none' }}
-          >
-            <h2 style={{ fontFamily: 'var(--font-head)', fontSize: 'clamp(20px, 3vw, 36px)', fontWeight: '700', color: 'var(--primary)', marginBottom: '8px' }}>
-              Our Campus Gallery
-            </h2>
-            <p style={{ fontSize: '14px', color: 'var(--text2)', maxWidth: '400px', margin: '0 auto' }}>
-              State-of-the-art facilities, world-class faculty, 30+ years of excellence.
-            </p>
-          </motion.div>
-
-          {/* The cards */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-            {IMAGES.slice(0, TOTAL_IMAGES).map((src, i) => {
+          {/* Cards Layer */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            {IMAGES.map((src, i) => {
               let target = { x: 0, y: 0, rotation: 0, scale: 1, opacity: 1 };
 
               if (introPhase === "scatter") {
                 target = scatterPositions[i];
               } else if (introPhase === "line") {
-                const lineSpacing = 70;
-                const lineTotalWidth = TOTAL_IMAGES * lineSpacing;
-                target = { x: i * lineSpacing - lineTotalWidth / 2, y: 0, rotation: 0, scale: 1, opacity: 1 };
+                const lineSpacing = containerSize.width < 768 ? 40 : 80;
+                target = { 
+                  x: i * lineSpacing - (TOTAL_IMAGES * lineSpacing) / 2, 
+                  y: 0, 
+                  rotation: 0, 
+                  scale: 0.8, 
+                  opacity: 1 
+                };
               } else {
                 const isMobile = containerSize.width < 768;
-                const minDimension = Math.min(containerSize.width, containerSize.height);
-                const circleRadius = Math.min(minDimension * 0.35, 220);
-                const circleAngle = (i / TOTAL_IMAGES) * 360;
-                const circleRad = (circleAngle * Math.PI) / 180;
+                const minDim = Math.min(containerSize.width, containerSize.height);
+                const circleRadius = isMobile ? minDim * 0.35 : minDim * 0.4;
+                
+                const angle = (i / TOTAL_IMAGES) * 360;
+                const circleRad = (angle * Math.PI) / 180;
+                
                 const circlePos = {
                   x: Math.cos(circleRad) * circleRadius,
                   y: Math.sin(circleRad) * circleRadius,
-                  rotation: circleAngle + 90,
+                  rotation: angle + 90,
                 };
-                const baseRadius = Math.min(containerSize.width, containerSize.height * 1.5);
-                const arcRadius = baseRadius * (isMobile ? 1.4 : 1.1);
-                const arcApexY = containerSize.height * (isMobile ? 0.35 : 0.25);
-                const arcCenterY = arcApexY + arcRadius;
-                const spreadAngle = isMobile ? 100 : 130;
+
+                // Arc transformation (Morphs into a broad arc at the bottom)
+                const arcRadius = containerSize.width * (isMobile ? 1.5 : 1.2);
+                const spreadAngle = isMobile ? 90 : 120;
                 const startAngle = -90 - spreadAngle / 2;
                 const step = spreadAngle / (TOTAL_IMAGES - 1);
-                const scrollProgress = Math.min(Math.max(rotateValue / 360, 0), 1);
-                const boundedRotation = -scrollProgress * spreadAngle * 0.8;
-                const currentArcAngle = startAngle + i * step + boundedRotation;
+                
+                // Add rotation based on scroll
+                const currentArcAngle = startAngle + i * step + (rotateValue - 90);
                 const arcRad = (currentArcAngle * Math.PI) / 180;
+                
                 const arcPos = {
                   x: Math.cos(arcRad) * arcRadius + parallaxValue,
-                  y: Math.sin(arcRad) * arcRadius + arcCenterY,
+                  y: Math.sin(arcRad) * arcRadius + (containerSize.height * 0.9),
                   rotation: currentArcAngle + 90,
-                  scale: isMobile ? 1.4 : 1.8,
+                  scale: isMobile ? 1.5 : 2.5,
                 };
+
                 target = {
                   x: lerp(circlePos.x, arcPos.x, morphValue),
                   y: lerp(circlePos.y, arcPos.y, morphValue),
                   rotation: lerp(circlePos.rotation, arcPos.rotation, morphValue),
-                  scale: lerp(1, arcPos.scale, morphValue),
+                  scale: lerp(0.8, arcPos.scale, morphValue),
                   opacity: 1,
                 };
               }
@@ -320,6 +276,38 @@ export default function ScrollMorphGallery() {
               );
             })}
           </div>
+
+          {/* Reveal Content */}
+          <motion.div
+            style={{ 
+              opacity: contentOpacity, 
+              y: contentY,
+              visibility: morphValue > 0.5 ? 'visible' : 'hidden'
+            }}
+            className="absolute z-10 text-center px-4"
+          >
+            <h3 className="text-[var(--primary)] text-3xl md:text-5xl font-heading font-bold mb-4">
+              World Class Facilities
+            </h3>
+            <p className="text-[var(--text2)] max-w-xl mx-auto text-sm md:text-base leading-relaxed">
+              Equipped with 300+ advanced dental units, cutting-edge radiology wings, 
+              and a comprehensive multi-specialty hospital serving 1000+ patients daily.
+            </p>
+            <div className="flex gap-4 justify-center mt-8">
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-[var(--border)] shadow-sm">
+                <div className="text-[var(--accent)] font-bold text-xl">30+</div>
+                <div className="text-[var(--text3)] text-xs uppercase">Years</div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-[var(--border)] shadow-sm">
+                <div className="text-[var(--accent)] font-bold text-xl">250+</div>
+                <div className="text-[var(--text3)] text-xs uppercase">Chairs</div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-[var(--border)] shadow-sm">
+                <div className="text-[var(--accent)] font-bold text-xl">NIRF</div>
+                <div className="text-[var(--text3)] text-xs uppercase">Top 10</div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>
