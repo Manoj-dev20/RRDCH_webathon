@@ -40,13 +40,16 @@ export default function Appointment() {
   const [searchParams] = useSearchParams();
   const preselectedDept = searchParams.get('dept');
 
+  const prefilledName = searchParams.get('name') || '';
+  const prefilledDate = searchParams.get('date') || new Date().toISOString().split('T')[0];
+
   const [step, setStep] = useState(preselectedDept ? 2 : 1);
   const [selectedSymptom, setSelectedSymptom] = useState(null);
   const [selectedDept, setSelectedDept] = useState(preselectedDept || null);
   const [formData, setFormData] = useState({
-    name: '',
+    name: prefilledName,
     phone: '',
-    date: new Date().toISOString().split('T')[0]
+    date: prefilledDate
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);

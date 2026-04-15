@@ -1,18 +1,22 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
-import { Phone, Search, Calendar, ArrowRight, Loader, AlertCircle, Upload, FileText, Sparkles, X } from 'lucide-react';
+import { 
+  Phone, Search, Calendar, ArrowRight, Loader, AlertCircle, 
+  Upload, FileText, Sparkles, X, User, Clock, Stethoscope 
+} from 'lucide-react';
 import { useLang } from '../context/LanguageContext';
 import { t } from '../data/translations';
+import { getDepartmentName } from '../data/departments';
 import { BACKEND_URL } from '../config';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import WhatsAppButton from '../components/WhatsAppButton';
 import MorphingSquare from '../components/MorphingSquare';
 
 export default function FollowUp() {
   const { lang } = useLang();
+  const navigate = useNavigate();
   const [phone, setPhone] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [appointments, setAppointments] = useState([]);
@@ -21,216 +25,220 @@ export default function FollowUp() {
 
   // Prescription Reader state
   const [prescriptionPreview, setPrescriptionPreview] = useState(null);
-  const [isAnalyzingPrescription, setIsAnalyzingPrescription] = useState(false);
-  const [prescriptionResult, setPrescriptionResult] = useState(null);
-  const [showPrescriptionModal, setShowPrescriptionModal] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   const handleSearch = async () => {
-    if (!phone || phone.length !== 10) {
-      setError(lang === 'kn' ? 'ಮಾನ್ಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ' : 'Please enter a valid mobile number');
-      return;
-    }
-
+    if (!phone || phone.length !== 10) return;
     setIsLoading(true);
-    setError(null);
     setHasSearched(true);
-    setAppointments([]);
-
+    setError(null);
     try {
-      const appointmentsRef = ref(db, `appointments/${phone}`);
-      const snapshot = await get(appointmentsRef);
-      
+      const snapshot = await get(ref(db, `appointments/${phone}`));
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        const appointmentList = Object.entries(data).map(([token, details]) => ({
-          token,
-          ...details
-        }));
-        appointmentList.sort((a, b) => b.bookedAt - a.bookedAt);
-        setAppointments(appointmentList);
+        const list = Object.entries(snapshot.val()).map(([t, d]) => ({ token: t, ...d }));
+        setAppointments(list.sort((a,b) => b.bookedAt - a.bookedAt));
       }
-    } catch (err) {
-      console.error('Error fetching appointments:', err);
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setIsLoading(false); }
   };
 
-  const formatDate = (dateStr) => {
-    return new Date(dateStr).toLocaleDateString(lang === 'kn' ? 'kn-IN' : 'en-IN', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
-
-  const formatDateTime = (timestamp) => {
-    return new Date(timestamp).toLocaleString(lang === 'kn' ? 'kn-IN' : 'en-IN');
-  };
-
-  // Prescription Reader Handlers
-  const handlePrescriptionUpload = (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
         setPrescriptionPreview(reader.result);
-        setShowPrescriptionModal(true);
+        setResult(null);
+        setShowModal(true);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const analyzePrescription = async () => {
-    if (!prescriptionPreview) return;
-
-    setIsAnalyzingPrescription(true);
-    setPrescriptionResult(null);
-
+  const analyze = async () => {
+    setIsAnalyzing(true);
+    setResult(null);
     try {
       const response = await fetch(`${BACKEND_URL}/api/prescription`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: prescriptionPreview })
       });
-
-      if (!response.ok) throw new Error('Analysis failed');
-
       const data = await response.json();
-      setPrescriptionResult(data);
+      setResult(data);
     } catch (err) {
-      console.error('Prescription analysis error:', err);
-      setError(lang === 'kn' ? 'ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ವಿಶ್ಲೇಷಣೆ ವಿಫಲವಾಗಿದೆ' : 'Prescription analysis failed');
-    } finally {
-      setIsAnalyzingPrescription(false);
-    }
+      setError(lang === 'kn' ? 'ವಿಫಲವಾಗಿದೆ' : 'Analysis failed');
+    } finally { setIsAnalyzing(false); }
   };
 
-  const clearPrescription = () => {
-    setPrescriptionPreview(null);
-    setPrescriptionResult(null);
-    setShowPrescriptionModal(false);
+  const calculateBookingDate = () => {
+    if (!result?.durationDays) return new Date().toISOString().split('T')[0];
+    const date = new Date();
+    date.setDate(date.getDate() + (parseInt(result.durationDays) || 7) + 1);
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleSmartBooking = () => {
+    const date = calculateBookingDate();
+    const dept = result.suggestedDept || 'oral-medicine';
+    const name = result.patientName || '';
+    navigate(`/appointment?dept=${dept}&name=${encodeURIComponent(name)}&date=${date}`);
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50/30">
       <Navbar />
       
-      <main className="py-8 md:py-12">
-        <div className="max-w-4xl mx-auto px-4">
-          <h1 className={`font-heading font-semibold text-3xl text-primary mb-2 text-center ${lang === 'kn' ? 'kannada' : ''}`}>
+      <main className="py-12 max-w-4xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h1 className={`text-4xl font-bold text-gray-900 mb-4 ${lang === 'kn' ? 'kannada' : ''}`}>
             {t('checkYourAppointment', lang)}
           </h1>
-          <p className="text-gray-600 text-center mb-8">
-            {t('enterRegisteredMobile', lang)}
-          </p>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-                  placeholder={lang === 'kn' ? '10 ಅಂಕೆಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : '10-digit mobile number'}
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                disabled={isLoading || phone.length !== 10}
-                className="px-8 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading ? <Loader size={20} className="animate-spin" /> : <Search size={20} />}
-                {t('checkQueue', lang)}
-              </button>
-            </div>
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
-          </div>
-
-          <div className="p-8 border-2 border-dashed border-[var(--accent)]/30 rounded-2xl text-center">
-            <div className="w-16 h-16 bg-[var(--accent)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText className="text-[var(--accent)]" size={32} />
-            </div>
-            <h3 className="font-heading font-semibold text-xl mb-2">
-              {lang === 'kn' ? 'AI ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದುಗ' : 'AI Prescription Reader'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {lang === 'kn' ? 'ನಿಮ್ಮ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Upload your prescription - AI reads it!'}
-            </p>
-
-            <label className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg cursor-pointer">
-              <Upload size={18} />
-              {lang === 'kn' ? 'ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Upload Prescription'}
-              <input type="file" accept="image/*" onChange={handlePrescriptionUpload} className="hidden" />
-            </label>
-          </div>
-
-          {/* Modal */}
-          {showPrescriptionModal && (
-            <div className="fixed inset-0 z-[999] bg-black/60 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
-                <div className="flex justify-between mb-4">
-                  <h3 className="text-xl font-bold">Analysis</h3>
-                  <button onClick={clearPrescription}><X size={24}/></button>
-                </div>
-
-                {prescriptionPreview && !prescriptionResult && (
-                  <img src={prescriptionPreview} className="w-full max-h-64 object-contain rounded-lg mb-4" />
-                )}
-
-                {!prescriptionResult && !isAnalyzingPrescription && (
-                  <button onClick={analyzePrescription} className="w-full py-4 bg-[var(--accent)] text-white font-bold rounded-xl">
-                    {lang === 'kn' ? 'ವಿಶ್ಲೇಷಿಸು' : 'Analyze Prescription'}
-                  </button>
-                )}
-
-                {isAnalyzingPrescription && (
-                  <div className="text-center py-12">
-                    <MorphingSquare size={60} />
-                    <p className="mt-4">Reading...</p>
-                  </div>
-                )}
-
-                {prescriptionResult && (
-                  <div className="space-y-4">
-                    {prescriptionResult.medicines?.length > 0 ? (
-                      <div className="bg-gray-50 p-4 rounded-xl">
-                        <h4 className="font-bold text-[var(--accent)] mb-2">Medicines</h4>
-                        <ul className="space-y-2">
-                          {prescriptionResult.medicines.map((m, i) => (
-                            <li key={i} className="p-3 bg-white border-l-4 border-[var(--accent)] rounded shadow-sm">
-                              <span className="font-bold">{typeof m === 'string' ? m : m.name}</span>
-                              {m.dosage && <span className="text-gray-500 text-xs ml-2">{m.dosage}</span>}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <div className="p-6 bg-orange-50 rounded-xl text-center">
-                        <p className="font-bold text-orange-800">No Data Found</p>
-                        <details className="mt-4">
-                           <summary className="text-[10px] cursor-pointer">Diagnostics</summary>
-                           <pre className="text-[8px] mt-2 whitespace-pre-wrap">{JSON.stringify(prescriptionResult, null, 2)}</pre>
-                        </details>
-                      </div>
-                    )}
-
-                    <button onClick={clearPrescription} className="w-full py-3 border border-gray-300 rounded-lg">Close</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          <p className="text-gray-600">{t('enterRegisteredMobile', lang)}</p>
         </div>
+
+        {/* Existing Search */}
+        <div className="bg-white p-2 rounded-2xl shadow-xl shadow-gray-200/50 mb-12 flex flex-col md:flex-row gap-2 border border-blue-50">
+          <div className="relative flex-1">
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="w-full pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all text-lg"
+              placeholder={lang === 'kn' ? 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : 'Mobile Number'}
+            />
+          </div>
+          <button
+            onClick={handleSearch}
+            className="md:px-10 py-4 bg-gray-900 text-white font-semibold rounded-xl hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg"
+          >
+            {isLoading ? <Loader size={20} className="animate-spin" /> : <Search size={20} />}
+            {t('checkQueue', lang)}
+          </button>
+        </div>
+
+        {/* New Feature: AI Reader */}
+        <div className="relative overflow-hidden bg-[var(--accent)] text-white p-10 rounded-3xl shadow-2xl shadow-[var(--accent)]/30 group cursor-pointer" 
+             onClick={() => document.getElementById('presc-input').click()}>
+          <div className="absolute top-0 right-0 -m-8 w-48 h-48 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all"></div>
+          <div className="relative flex flex-col md:flex-row items-center gap-8">
+            <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+              <FileText size={40} className="text-white" />
+            </div>
+            <div className="text-center md:text-left flex-1">
+              <h2 className="text-2xl font-bold mb-2">Smart Prescription Reader</h2>
+              <p className="opacity-80">Upload your prescription - We'll find your doctor, medicines, and suggest your next visit!</p>
+            </div>
+            <div className="px-6 py-3 bg-white text-[var(--accent)] font-bold rounded-xl flex items-center gap-2 group-hover:scale-105 transition-all">
+              <Upload size={20} />
+              {lang === 'kn' ? 'ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Quick Upload'}
+            </div>
+          </div>
+          <input type="file" id="presc-input" accept="image/*" onChange={handleFileUpload} className="hidden" />
+        </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-[1000] bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-[2rem] max-w-2xl w-full my-auto shadow-2xl overflow-hidden relative">
+              <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full transition-all text-gray-400 hover:text-gray-900">
+                <X size={24} />
+              </button>
+
+              <div className="p-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <Sparkles className="text-blue-500" />
+                  Prescription Analysis
+                </h3>
+
+                {!result && !isAnalyzing && (
+                  <div className="space-y-6">
+                    <img src={prescriptionPreview} className="w-full h-64 object-cover rounded-2xl shadow-inner border border-gray-100" />
+                    <button onClick={analyze} className="w-full py-5 bg-blue-600 text-white font-bold text-lg rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-200">
+                      Start Smart Analysis
+                    </button>
+                  </div>
+                )}
+
+                {isAnalyzing && (
+                  <div className="py-20 text-center">
+                    <MorphingSquare size={70} />
+                    <p className="mt-8 text-lg font-medium text-gray-600">Our Llama 4 AI is reading your prescription...</p>
+                  </div>
+                )}
+
+                {result && (
+                  <div className="space-y-6">
+                    {/* Top Info Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                        <div className="flex items-center gap-2 text-blue-600 mb-1">
+                          <User size={16} />
+                          <span className="text-xs font-bold uppercase tracking-wider">Patient</span>
+                        </div>
+                        <div className="font-bold text-gray-900">{result.patientName || 'Not found'}</div>
+                      </div>
+                      <div className="bg-purple-50/50 p-4 rounded-2xl border border-purple-100">
+                        <div className="flex items-center gap-2 text-purple-600 mb-1">
+                          <Stethoscope size={16} />
+                          <span className="text-xs font-bold uppercase tracking-wider">Doctor</span>
+                        </div>
+                        <div className="font-bold text-gray-900">{result.doctorName || 'Not found'}</div>
+                      </div>
+                    </div>
+
+                    {/* Medicines */}
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest px-1">Prescribed Medicines</h4>
+                      {result.medicines?.map((m, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                          <div>
+                            <div className="font-bold text-gray-900">{typeof m === 'string' ? m : m.name}</div>
+                            <div className="text-xs text-gray-500">{m.dosage && `${m.dosage} • `}{m.frequency}</div>
+                          </div>
+                          <Clock size={18} className="text-gray-300" />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Smart Suggested Dept */}
+                    <div className="bg-green-50 p-5 rounded-2xl border border-green-100 flex items-center justify-between">
+                      <div>
+                        <div className="text-[10px] font-bold text-green-600 uppercase mb-1">Suggested for Follow-up</div>
+                        <div className="font-bold text-green-900 text-lg">
+                          {result.suggestedDept ? getDepartmentName(result.suggestedDept, lang) : 'General Outreach'}
+                        </div>
+                      </div>
+                      <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-green-600 shadow-sm">
+                        <ArrowRight />
+                      </div>
+                    </div>
+
+                    {/* Action */}
+                    <div className="pt-2">
+                       <button 
+                         onClick={handleSmartBooking}
+                         className="w-full py-5 bg-gray-900 text-white font-bold text-lg rounded-2xl hover:bg-black transition-all shadow-xl shadow-gray-200 flex items-center justify-center gap-4"
+                       >
+                         <Calendar size={22} />
+                         Book Follow-up Appointment
+                       </button>
+                       <p className="text-center text-[11px] text-gray-400 mt-3 italic">
+                         *Auto-calculated for {calculateBookingDate()} based on medication duration.
+                       </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }
