@@ -12,6 +12,7 @@ import { getDepartmentName } from '../data/departments';
 import { BACKEND_URL } from '../config';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import WhatsAppButton from '../components/WhatsAppButton';
 import MorphingSquare from '../components/MorphingSquare';
 
 export default function FollowUp() {
