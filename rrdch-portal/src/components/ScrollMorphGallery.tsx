@@ -26,7 +26,7 @@ function FlipCard({ src, index, total, phase, target }: FlipCardProps) {
         scale: target.scale,
         opacity: target.opacity,
       }}
-      transition={{ type: "spring", stiffness: 40, damping: 15 }}
+      transition={{ type: "spring", stiffness: 45, damping: 18 }}
       style={{
         position: "absolute",
         width: IMG_WIDTH,
@@ -43,11 +43,11 @@ function FlipCard({ src, index, total, phase, target }: FlipCardProps) {
         whileHover={{ rotateY: 180 }}
       >
         <div
-          className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl shadow-xl bg-gray-100"
+          className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl shadow-xl bg-white/10 backdrop-blur-sm border border-white/20"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <img src={src} alt={`gallery-${index}`} className="h-full w-full object-cover" loading="eager" />
-          <div className="absolute inset-0 bg-black/5 transition-colors group-hover:bg-transparent" />
+          <img src={src} alt="" className="h-full w-full object-cover" loading="eager" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent transition-opacity group-hover:opacity-0" />
         </div>
         <div
           className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl shadow-xl bg-gradient-to-br from-[#1A5276] to-[#17A589] flex flex-col items-center justify-center p-4 border border-white/20"
@@ -55,7 +55,7 @@ function FlipCard({ src, index, total, phase, target }: FlipCardProps) {
         >
           <div className="text-center">
             <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-1">RRDCH</p>
-            <p className="text-xs font-medium text-white/90 italic">Legacy since 1992</p>
+            <p className="text-[10px] text-white/80 italic">Innovation in Dentistry</p>
           </div>
         </div>
       </motion.div>
