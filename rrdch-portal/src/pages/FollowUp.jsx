@@ -323,8 +323,13 @@ export default function FollowUp() {
                         </h4>
                         <ul className="space-y-2">
                           {prescriptionResult.medicines.map((med, idx) => (
-                            <li key={idx} className="text-sm text-[var(--text2)] pl-3 border-l-2 border-[var(--accent)]">
-                              {med}
+                            <li key={idx} className="text-sm text-[var(--text2)] p-3 bg-white rounded-lg border-l-4 border-[var(--accent)] shadow-sm">
+                              <div className="font-bold text-[var(--primary)]">{med.name}</div>
+                              {med.dosage && med.frequency && (
+                                <div className="text-xs text-[var(--text3)] mt-1">
+                                  {med.dosage} • {med.frequency}
+                                </div>
+                              )}
                             </li>
                           ))}
                         </ul>
