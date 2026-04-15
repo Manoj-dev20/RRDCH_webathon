@@ -91,7 +91,7 @@ const RRDCHGallerySelector = () => {
         {options.map((option, index) => (
           <div
             key={index}
-            onClick={() => setActiveIndex(index)}
+            onMouseEnter={() => setActiveIndex(index)}
             style={{
               backgroundImage: `url('${option.image}')`,
               backgroundSize: activeIndex === index ? 'auto 100%' : 'auto 120%',
