@@ -8,7 +8,13 @@ dotenv.config()
 const app = express()
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: ['https://rrdch-webathon.vercel.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}))
+app.options('*', cors()) // Enable pre-flight for all routes
+
 app.use(express.json({ limit: '10mb' }))
 
 // Constants
