@@ -341,7 +341,7 @@ export default function FollowUp() {
                           {lang === 'kn' ? '💊 ಔಷಧಿಗಳು' : '💊 Medicines'}
                         </h4>
                         <ul className="space-y-2">
-                          {prescriptionResult.medicines.map((med: any, idx) => (
+                          {prescriptionResult.medicines.map((med, idx) => (
                             <li key={idx} className="text-sm text-[var(--text2)] p-3 bg-white rounded-lg border-l-4 border-[var(--accent)] shadow-sm">
                               <div className="font-bold text-[var(--primary)]">{typeof med === 'string' ? med : med.name}</div>
                               {typeof med !== 'string' && (med.dosage || med.frequency) && (
