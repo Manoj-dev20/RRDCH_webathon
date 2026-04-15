@@ -117,12 +117,12 @@ export default function ScrollMorphGallery() {
 
   const virtualScroll = useTransform(scrollYProgress, [0, 1], [0, MAX_SCROLL]);
 
-  const morphProgress = useTransform(virtualScroll, [0, 1000], [0, 1]);
-  const smoothMorph = useSpring(morphProgress, { stiffness: 40, damping: 20 });
+  const morphProgress = useTransform(virtualScroll, [1500, 2500], [0, 1]);
+  const smoothMorph = useSpring(morphProgress, { stiffness: 45, damping: 20 });
   
-  // Rotate during the middle phase of the scroll
-  const scrollRotate = useTransform(virtualScroll, [1000, 3000], [0, 180]);
-  const smoothScrollRotate = useSpring(scrollRotate, { stiffness: 40, damping: 20 });
+  // Rotate during the middle-to-end phase
+  const scrollRotate = useTransform(virtualScroll, [500, 2500], [0, 180]);
+  const smoothScrollRotate = useSpring(scrollRotate, { stiffness: 45, damping: 20 });
   
   const mouseX = useMotionValue(0);
   const smoothMouseX = useSpring(mouseX, { stiffness: 30, damping: 20 });
@@ -280,9 +280,9 @@ export default function ScrollMorphGallery() {
           {/* Reveal Content */}
           <motion.div
             style={{ 
-              opacity: contentOpacity, 
-              y: contentY,
-              visibility: morphValue > 0.5 ? 'visible' : 'hidden'
+              opacity: useTransform(smoothMorph, [0.8, 1], [0, 1]), 
+              y: useTransform(smoothMorph, [0.8, 1], [20, 0]),
+              visibility: morphValue > 0.8 ? 'visible' : 'hidden'
             }}
             className="absolute z-10 text-center px-4"
           >
