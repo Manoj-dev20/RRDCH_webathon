@@ -13,8 +13,8 @@ interface FlipCardProps {
   target: { x: number; y: number; rotation: number; scale: number; opacity: number };
 }
 
-const IMG_WIDTH = 60;
-const IMG_HEIGHT = 85;
+const IMG_WIDTH = 110;
+const IMG_HEIGHT = 150;
 
 function FlipCard({ src, index, total, phase, target }: FlipCardProps) {
   return (
@@ -43,19 +43,19 @@ function FlipCard({ src, index, total, phase, target }: FlipCardProps) {
         whileHover={{ rotateY: 180 }}
       >
         <div
-          className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg bg-gray-200"
+          className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl shadow-xl bg-gray-100"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <img src={src} alt={`gallery-${index}`} className="h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-black/10 transition-colors group-hover:bg-transparent" />
+          <img src={src} alt={`gallery-${index}`} className="h-full w-full object-cover" loading="eager" />
+          <div className="absolute inset-0 bg-black/5 transition-colors group-hover:bg-transparent" />
         </div>
         <div
-          className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg bg-[#1A5276] flex flex-col items-center justify-center p-4 border border-[#2E86C1]"
+          className="absolute inset-0 h-full w-full overflow-hidden rounded-2xl shadow-xl bg-gradient-to-br from-[#1A5276] to-[#17A589] flex flex-col items-center justify-center p-4 border border-white/20"
           style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
         >
           <div className="text-center">
-            <p className="text-[8px] font-bold text-[#17A589] uppercase tracking-widest mb-1">RRDCH</p>
-            <p className="text-xs font-medium text-white">Since 1992</p>
+            <p className="text-[10px] font-bold text-white uppercase tracking-widest mb-1">RRDCH</p>
+            <p className="text-xs font-medium text-white/90 italic">Legacy since 1992</p>
           </div>
         </div>
       </motion.div>
@@ -67,28 +67,28 @@ const TOTAL_IMAGES = 20;
 const MAX_SCROLL = 3000;
 const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
 
-// RRDCH-themed dental/medical images from Unsplash
+// High-quality, reliable dental/medical/campus Unsplash images
 const IMAGES = [
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/building.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Chairman.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Auditoruim-1.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Clinic-1.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Library-1.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Hostel-2.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Cafeteria-1.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Classroom-1.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Clinic-2.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Lab.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2023/12/rrdch-campus-view.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Oral-Medicine.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Bus.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Gym.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Reception.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Group.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Campus-Night.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Dental-Chair.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2022/11/RRDCH-Accreditation.jpg",
-  "https://www.rrdch.org/rrdch/wp-content/uploads/2015/06/Sports.jpg",
+  "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?q=80&w=1974&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1780&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1600585154340-be6199f7a096?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1498243639359-2830a747c211?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=2053&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1526256262350-7da7584cf5eb?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=1932&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1532187863486-abf9d39d9992?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1581056771107-24ca5f033842?q=80&w=2070&auto=format&fit=crop",
+  "https://images.unsplash.com/photo-1551601651-2a8555f1a136?q=80&w=1747&auto=format&fit=crop",
 ];
 
 export default function ScrollMorphGallery() {
@@ -216,7 +216,7 @@ export default function ScrollMorphGallery() {
               if (introPhase === "scatter") {
                 target = scatterPositions[i];
               } else if (introPhase === "line") {
-                const lineSpacing = containerSize.width < 768 ? 40 : 80;
+                const lineSpacing = containerSize.width < 768 ? 60 : 120;
                 target = { 
                   x: i * lineSpacing - (TOTAL_IMAGES * lineSpacing) / 2, 
                   y: 0, 
@@ -227,7 +227,7 @@ export default function ScrollMorphGallery() {
               } else {
                 const isMobile = containerSize.width < 768;
                 const minDim = Math.min(containerSize.width, containerSize.height);
-                const circleRadius = isMobile ? minDim * 0.35 : minDim * 0.4;
+                const circleRadius = isMobile ? minDim * 0.45 : minDim * 0.55;
                 
                 const angle = (i / TOTAL_IMAGES) * 360;
                 const circleRad = (angle * Math.PI) / 180;
