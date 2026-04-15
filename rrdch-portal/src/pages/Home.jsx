@@ -296,14 +296,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Element 2: Brand-New Scroll Morph Hero (Virtual Scroll) */}
-      <section className="py-24 bg-white overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="w-full h-[600px] md:h-[800px] border border-[var(--border)] rounded-[2.5rem] overflow-hidden relative shadow-2xl">
-            <ScrollMorphHero />
-          </div>
-        </div>
-      </section>
+      {/* Element 2: Natural Page-Scroll Morph Hero */}
+      <ScrollMorphHero />
 
       {/* Element 3: Interactive Image Selector */}
       <RRDCHGallerySelector />
