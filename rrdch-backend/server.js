@@ -106,7 +106,7 @@ app.post('/api/prescription', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.2-90b-vision-preview',
+        model: 'llama-3.2-11b-vision-preview',
         temperature: 0.1,
         messages: [{
           role: 'user',
@@ -114,17 +114,10 @@ app.post('/api/prescription', async (req, res) => {
             { type: 'image_url', image_url: { url: image } },
             {
               type: 'text',
-              text: `You are an expert pharmacist extracting data from a medical prescription.
-                Extract: 
-                - medicines: an array of objects with 'name', 'dosage', and 'frequency'.
-                - instructions: any general advice or timing (e.g., 'after food').
-                - follow_up: any mention of next visit.
-                - doctorName: name of the doctor if visible.
-                - notes: any other important info.
-                Return ONLY valid JSON:
+              text: `You are a transcription assistant. Read the medical document and transcribe the visible information exactly into this JSON format:
                 { "medicines": [{ "name": string, "dosage": string, "frequency": string }],
                   "instructions": string, "follow_up": string, "doctorName": string, "notes": string }
-                If something is unreadable, use "Unreadable". If missing, use null.`
+                Focus strictly on transcribing text. If no medicines are found, leave the array empty.`
             }
           ]
         }]
