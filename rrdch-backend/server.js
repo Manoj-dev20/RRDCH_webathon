@@ -97,7 +97,7 @@ app.post('/api/prescription', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.2-11b-vision-preview',
+        model: 'llama-3.2-90b-vision-preview',
         temperature: 0.1,
         messages: [{
           role: 'user',

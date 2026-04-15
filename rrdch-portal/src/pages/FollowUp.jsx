@@ -315,6 +315,15 @@ export default function FollowUp() {
                 {/* Analysis Results */}
                 {prescriptionResult && (
                   <div className="space-y-4">
+                    {/* Empty Result Fallback */}
+                    {!prescriptionResult.medicines?.length && !prescriptionResult.instructions && !prescriptionResult.doctorName && (
+                      <div className="text-center py-6 px-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        <p className="text-sm text-gray-500">
+                          {lang === 'kn' ? 'ಕ್ಷಮಿಸಿ, ಈ ಚಿತ್ರದಲ್ಲಿ ದತ್ತಾಂಶವನ್ನು ಕಂಡುಹಿಡಿಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾದ ಫೋಟೋವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ.' : 'Sorry, could not find any readable data in this image. Please try a clearer photo.'}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Medicines Section */}
                     {prescriptionResult.medicines && prescriptionResult.medicines.length > 0 && (
                       <div className="bg-[var(--surface)] rounded-lg p-4">
