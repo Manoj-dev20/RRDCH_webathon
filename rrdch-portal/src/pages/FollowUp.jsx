@@ -331,6 +331,21 @@ export default function FollowUp() {
                             AI RAW: {typeof prescriptionResult.raw === 'string' ? prescriptionResult.raw.substring(0, 200) : JSON.stringify(prescriptionResult.raw).substring(0, 200)}...
                           </div>
                         )}
+
+                        {/* Diagnostic Toggle */}
+                        <div className="mt-4 pt-4 border-t border-orange-200">
+                          <details className="text-left">
+                            <summary className="text-[10px] text-orange-400 cursor-pointer hover:underline uppercase tracking-widest font-bold">
+                              View Diagnostic Details
+                            </summary>
+                            <div className="mt-2 p-2 bg-black/5 rounded font-mono text-[10px] text-orange-900 border border-orange-200/50 break-all">
+                              <p className="font-bold mb-1">Response JSON:</p>
+                              <pre className="whitespace-pre-wrap">
+                                {JSON.stringify(prescriptionResult, null, 2)}
+                              </pre>
+                            </div>
+                          </details>
+                        </div>
                       </div>
                     )}
 

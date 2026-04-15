@@ -50,7 +50,7 @@ app.post('/api/triage', async (req, res) => {
             content: `You are a dental triage assistant for RRDCH hospital Bangalore.
               Available departments: Oral Medicine & Radiology, Conservative Dentistry & Endodontics,
               Periodontology, Pedodontics & Preventive Dentistry, Orthodontics & Dentofacial Orthopedics,
-              Oral & Maxillofacial Surgery, Prosthodontics & Crown and Bridge, Public Health Dentistry,
+              Oral & Max maxillofacial Surgery, Prosthodontics & Crown and Bridge, Public Health Dentistry,
               Oral & Maxillofacial Pathology, Implantology.
               Return ONLY valid JSON (no markdown, no explanation):
               { "department": string, "severity": "routine"|"urgent"|"emergency",
@@ -92,12 +92,17 @@ app.post('/api/prescription', async (req, res) => {
     const { image } = req.body
 
     if (!image) {
-      return res.status(400).json({ error: "Image URL is required" })
+      console.error('No image received in body')
+      return res.status(400).json({ error: "Image data is missing" })
     }
 
     if (!GROQ_KEY) {
       return res.status(500).json({ error: "Missing GROQ_API_KEY in environment variables" })
     }
+
+    console.log('--- Image Analytics ---')
+    console.log('Received base64 length:', image.length)
+    console.log('Mime type check:', image.substring(0, 30))
 
     const response = await fetch(GROQ_URL, {
       method: 'POST',
@@ -114,10 +119,10 @@ app.post('/api/prescription', async (req, res) => {
             { type: 'image_url', image_url: { url: image } },
             {
               type: 'text',
-              text: `You are a transcription assistant. Read the medical document and transcribe the visible information exactly into this JSON format:
+              text: `TRANSCRIPTION TASK: Read the medical document and output EXACTLY this JSON:
                 { "medicines": [{ "name": string, "dosage": string, "frequency": string }],
                   "instructions": string, "follow_up": string, "doctorName": string, "notes": string }
-                Focus strictly on transcribing text. If no medicines are found, leave the array empty.`
+                If you cannot find any medicines, return an empty array. Do not add any text before or after the JSON.`
             }
           ]
         }]
@@ -125,6 +130,13 @@ app.post('/api/prescription', async (req, res) => {
     })
 
     const data = await response.json()
+    
+    // Check for Groq-level errors
+    if (data.error) {
+      console.error('Groq API Error:', data.error)
+      return res.json({ error: "Groq API Error", details: data.error })
+    }
+
     const content = data?.choices?.[0]?.message?.content || "{}"
 
     console.log('--- AI RAW CONTENT START ---')
@@ -142,18 +154,23 @@ app.post('/api/prescription', async (req, res) => {
       }
     } catch (e) {
       console.error('Prescription Parse Error:', e)
-      try {
-        parsed = JSON.parse(content.replace(/```json|```/g, '').trim())
-      } catch (e2) {
-        parsed = { error: "Parse failure", raw: content }
-      }
+      parsed = { error: "Parse failure", raw_content: content }
     }
 
-    res.json(parsed)
+    // Attach diagnostic fields
+    res.json({
+      ...parsed,
+      _diagnostics: {
+        content_extracted: !!content,
+        raw_char_count: content.length,
+        raw_snippet: content.substring(0, 100),
+        image_received_len: image.length
+      }
+    })
 
   } catch (err) {
-    console.error('Prescription error:', err)
-    res.status(500).json({ error: 'Prescription read failed', details: err.message })
+    console.error('Critical Prescription error:', err)
+    res.status(500).json({ error: 'Server exploded', details: err.message })
   }
 })
 
