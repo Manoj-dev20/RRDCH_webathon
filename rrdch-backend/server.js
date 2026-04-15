@@ -52,7 +52,7 @@ app.post('/api/triage', async (req, res) => {
               Periodontology, Pedodontics & Preventive Dentistry, Orthodontics & Dentofacial Orthopedics,
               Oral & Maxillofacial Surgery, Prosthodontics & Crown and Bridge, Public Health Dentistry,
               Oral & Maxillofacial Pathology, Implantology.
-              Return ONLY valid JSON (no markdown, no explanation):
+              Return ONLY valid JSON:
               { "department": string, "severity": "routine"|"urgent"|"emergency",
                 "reason": string, "advice": string, "kannada_reason": string }`
           },
@@ -64,7 +64,6 @@ app.post('/api/triage', async (req, res) => {
     const data = await response.json()
     const content = data?.choices?.[0]?.message?.content || "{}"
 
-    // Robust JSON extraction
     let parsed = {}
     try {
       const start = content.indexOf('{')
@@ -86,7 +85,7 @@ app.post('/api/triage', async (req, res) => {
   }
 })
 
-// ─── ROUTE 2: Prescription Reader ───
+// ─── ROUTE 2: Prescription Reader (Migrated to Llama 4 Scout) ───
 app.post('/api/prescription', async (req, res) => {
   try {
     const { image } = req.body
@@ -106,7 +105,7 @@ app.post('/api/prescription', async (req, res) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'llama-3.2-90b-vision-preview',
+        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
         temperature: 0.1,
         messages: [{
           role: 'user',
@@ -117,7 +116,7 @@ app.post('/api/prescription', async (req, res) => {
               text: `TRANSCRIPTION TASK: Read the medical document and output EXACTLY this JSON format:
                 { "medicines": [{ "name": string, "dosage": string, "frequency": string }],
                   "instructions": string, "follow_up": string, "doctorName": string, "notes": string }
-                Focus strictly on transcribing text exactly as it appears. If no medicines are found, leave the array empty. Do not add any text before or after the JSON.`
+                Focus strictly on transcribing text exactly as it appears. If no medicines are found, leave the array empty. Return ONLY valid JSON.`
             }
           ]
         }]
@@ -126,7 +125,6 @@ app.post('/api/prescription', async (req, res) => {
 
     const data = await response.json()
     
-    // Check for Groq-level errors
     if (data.error) {
       return res.json({ error: "Groq API Error", details: data.error })
     }
@@ -146,13 +144,10 @@ app.post('/api/prescription', async (req, res) => {
       parsed = { error: "Parse failure", raw_content: content }
     }
 
-    res.json({
-      ...parsed,
-      _debug_content: content.substring(0, 500) // For simple diagnostics
-    })
+    res.json(parsed)
 
   } catch (err) {
-    console.error('Critical Prescription error:', err)
+    console.error('Prescription critical error:', err)
     res.status(500).json({ error: 'Server error', details: err.message })
   }
 })
