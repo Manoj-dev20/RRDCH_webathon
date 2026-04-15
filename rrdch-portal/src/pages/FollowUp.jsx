@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ref, get } from 'firebase/database';
 import { db } from '../firebase';
@@ -16,236 +16,235 @@ import WhatsAppButton from '../components/WhatsAppButton';
 import MorphingSquare from '../components/MorphingSquare';
 
 export default function FollowUp() {
-  const [runtimeError, setRuntimeError] = useState(null);
+  const { lang } = useLang();
+  const navigate = useNavigate();
+  const [phone, setPhone] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [appointments, setAppointments] = useState([]);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Catch-all safety: if any logic in this component fails, show the error
-  try {
-    const langContext = useLang();
-    const navigate = useNavigate();
-    
-    // Check if context exists
-    if (!langContext) throw new Error("LanguageContext is missing!");
-    const { lang } = langContext;
+  // Prescription Reader state
+  const [prescriptionPreview, setPrescriptionPreview] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-    const [phone, setPhone] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [appointments, setAppointments] = useState([]);
-    const [hasSearched, setHasSearched] = useState(false);
-    const [error, setError] = useState(null);
-
-    const [prescriptionPreview, setPrescriptionPreview] = useState(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [result, setResult] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-
-    const handleSearch = async () => {
-      if (!phone || phone.length !== 10) return;
-      setIsLoading(true);
-      setHasSearched(true);
-      setError(null);
-      try {
-        const snapshot = await get(ref(db, `appointments/${phone}`));
-        if (snapshot.exists()) {
-          const list = Object.entries(snapshot.val()).map(([t, d]) => ({ token: t, ...d }));
-          setAppointments(list.sort((a,b) => b.bookedAt - a.bookedAt));
-        }
-      } catch (err) { setError(err.message); }
-      finally { setIsLoading(false); }
-    };
-
-    const handleFileUpload = (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setPrescriptionPreview(reader.result);
-          setResult(null);
-          setShowModal(true);
-        };
-        reader.readAsDataURL(file);
+  const handleSearch = async () => {
+    if (!phone || phone.length !== 10) return;
+    setIsLoading(true);
+    setHasSearched(true);
+    setError(null);
+    try {
+      const snapshot = await get(ref(db, `appointments/${phone}`));
+      if (snapshot.exists()) {
+        const list = Object.entries(snapshot.val()).map(([t, d]) => ({ token: t, ...d }));
+        setAppointments(list.sort((a,b) => b.bookedAt - a.bookedAt));
       }
-    };
+    } catch (err) { setError(err.message); }
+    finally { setIsLoading(false); }
+  };
 
-    const analyze = async () => {
-      setIsAnalyzing(true);
-      setResult(null);
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/prescription`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: prescriptionPreview })
-        });
-        const data = await response.json();
-        setResult(data);
-      } catch (err) {
-        setError(lang === 'kn' ? 'ವಿಫಲವಾಗಿದೆ' : 'Analysis failed');
-      } finally { setIsAnalyzing(false); }
-    };
-
-    const calculateBookingDate = () => {
-      if (!result?.durationDays) return new Date().toISOString().split('T')[0];
-      const date = new Date();
-      date.setDate(date.getDate() + (parseInt(result.durationDays) || 7) + 1);
-      return date.toISOString().split('T')[0];
-    };
-
-    const handleSmartBooking = () => {
-      const date = calculateBookingDate();
-      const dept = result?.suggestedDept || 'oral-medicine';
-      const name = result?.patientName || '';
-      navigate(`/appointment?dept=${dept}&name=${encodeURIComponent(name)}&date=${date}`);
-    };
-
-    if (runtimeError) {
-      return (
-        <div className="p-10 bg-red-50 text-red-700 min-h-screen">
-          <h1 className="text-2xl font-bold mb-4">Safety Mode: Runtime Error</h1>
-          <pre className="bg-white p-4 rounded border border-red-200">{runtimeError}</pre>
-          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-red-600 text-white rounded">Retry</button>
-        </div>
-      );
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPrescriptionPreview(reader.result);
+        setResult(null);
+        setShowModal(true);
+      };
+      reader.readAsDataURL(file);
     }
+  };
 
-    return (
-      <div className="min-h-screen bg-gray-50/30">
-        <Navbar />
-        
-        <main className="py-12 max-w-4xl mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className={`text-4xl font-bold text-gray-900 mb-4 ${lang === 'kn' ? 'kannada' : ''}`}>
-              {t('checkYourAppointment', lang)}
-            </h1>
-            <p className="text-gray-600 font-medium">{t('enterRegisteredMobile', lang)}</p>
+  const analyze = async () => {
+    setIsAnalyzing(true);
+    setResult(null);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/prescription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: prescriptionPreview })
+      });
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError(lang === 'kn' ? 'ವಿಫಲವಾಗಿದೆ' : 'Analysis failed');
+    } finally { setIsAnalyzing(false); }
+  };
+
+  const calculateBookingDate = () => {
+    if (!result?.durationDays) return new Date().toISOString().split('T')[0];
+    const date = new Date();
+    date.setDate(date.getDate() + (parseInt(result.durationDays) || 7) + 1);
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleSmartBooking = () => {
+    const date = calculateBookingDate();
+    const dept = result?.suggestedDept || 'oral-medicine';
+    const name = result?.patientName || '';
+    navigate(`/appointment?dept=${dept}&name=${encodeURIComponent(name)}&date=${date}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      
+      <main className="py-12 max-w-4xl mx-auto px-4">
+        <div className="text-center mb-12">
+          <h1 className={`text-4xl font-bold text-gray-900 mb-4 ${lang === 'kn' ? 'kannada' : ''}`}>
+            {t('checkYourAppointment', lang)}
+          </h1>
+          <p className="text-gray-600 font-medium">{t('enterRegisteredMobile', lang)}</p>
+        </div>
+
+        {/* Existing Search */}
+        <div className="bg-white p-2 rounded-2xl shadow-xl border border-gray-100 mb-16 flex flex-col md:flex-row gap-2">
+          <div className="relative flex-1">
+            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              className="w-full pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
+              placeholder={lang === 'kn' ? 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : 'Mobile Number'}
+            />
           </div>
+          <button
+            onClick={handleSearch}
+            className="md:px-10 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-all shadow-lg flex items-center justify-center gap-3"
+          >
+            {isLoading ? <Loader size={20} className="animate-spin" /> : <Search size={20} />}
+            {t('checkQueue', lang)}
+          </button>
+        </div>
 
-          <div className="bg-white p-2 rounded-2xl shadow-xl border border-blue-50 mb-12 flex flex-col md:flex-row gap-2">
-            <div className="relative flex-1">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                className="w-full pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-lg"
-                placeholder={lang === 'kn' ? 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : 'Mobile Number'}
-              />
-            </div>
-            <button
-              onClick={handleSearch}
-              className="md:px-10 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg flex items-center justify-center gap-3"
-            >
-              {isLoading ? <Loader size={20} className="animate-spin" /> : <Search size={20} />}
-              {t('checkQueue', lang)}
-            </button>
+        {/* AI Reader Feature */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-800 text-white p-10 rounded-[2.5rem] shadow-2xl flex flex-col md:flex-row items-center gap-8 cursor-pointer group" 
+             onClick={() => document.getElementById('presc-input').click()}>
+          <div className="absolute top-0 right-0 -m-12 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform"></div>
+          <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center backdrop-blur-md shrink-0">
+            <Sparkles size={48} className="text-white animate-pulse" />
           </div>
-
-          <div className="relative overflow-hidden bg-blue-900 text-white p-10 rounded-3xl shadow-2xl group cursor-pointer" 
-               onClick={() => document.getElementById('presc-input').click()}>
-            <div className="relative flex flex-col md:flex-row items-center gap-8">
-              <div className="w-20 h-20 bg-white/10 rounded-2xl flex items-center justify-center">
-                <FileText size={40} className="text-white" />
-              </div>
-              <div className="text-center md:text-left flex-1">
-                <h2 className="text-2xl font-bold mb-2">Smart Prescription Reader</h2>
-                <p className="opacity-80 leading-relaxed">Let AI read your prescription, identify medicines, and suggest your follow-up date!</p>
-              </div>
-              <div className="px-6 py-3 bg-white text-blue-900 font-bold rounded-xl flex items-center gap-2">
-                <Upload size={20} />
-                Quick Upload
-              </div>
-            </div>
-            <input type="file" id="presc-input" accept="image/*" onChange={handleFileUpload} className="hidden" />
+          <div className="text-center md:text-left">
+            <h2 className="text-3xl font-bold mb-2">Smart Prescription AI</h2>
+            <p className="text-blue-100 text-lg">Instant follow-up booking & medicine analysis from your prescription photo.</p>
           </div>
+          <div className="md:ml-auto flex flex-col items-center">
+             <div className="px-8 py-4 bg-white text-blue-700 font-black rounded-2xl shadow-xl flex items-center gap-2 group-hover:bg-blue-50 transition-colors">
+                <Upload size={22} />
+                UPLOAD NOW
+             </div>
+             <p className="mt-2 text-[10px] text-blue-200">Supports Clear Photos & PDFs</p>
+          </div>
+          <input type="file" id="presc-input" accept="image/*" onChange={handleFileUpload} className="hidden" />
+        </div>
 
-          {showModal && (
-            <div className="fixed inset-0 z-[1000] bg-gray-900/90 flex items-center justify-center p-4 overflow-y-auto">
-              <div className="bg-white rounded-[2rem] max-w-2xl w-full my-auto shadow-2xl overflow-hidden relative p-8">
-                <button onClick={() => setShowModal(false)} className="absolute top-6 right-6 p-2 text-gray-400 hover:text-gray-900">
-                  <X size={24} />
-                </button>
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 z-[1000] bg-gray-900/90 backdrop-blur-md flex items-center justify-center p-4">
+            <div className="bg-white rounded-[3rem] max-w-2xl w-full my-auto shadow-2xl overflow-hidden relative">
+              <button onClick={() => setShowModal(false)} className="absolute top-8 right-8 p-2 text-gray-400 hover:text-gray-900 bg-gray-50 rounded-full transition-all">
+                <X size={24} />
+              </button>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                  <Sparkles className="text-blue-500" />
-                  Prescription Analysis
+              <div className="p-10">
+                <h3 className="text-2xl font-black text-gray-900 mb-8 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Sparkles className="text-blue-600" size={20} />
+                  </div>
+                  AI Clinical Insights
                 </h3>
 
                 {!result && !isAnalyzing && (
-                  <div className="space-y-6 text-center">
-                    <img src={prescriptionPreview} className="w-full h-64 object-contain rounded-2xl border" />
-                    <button onClick={analyze} className="w-full py-5 bg-blue-600 text-white font-bold text-lg rounded-2xl shadow-xl hover:bg-blue-700 transition-all">
-                      Start Smart Analysis
+                  <div className="space-y-8 text-center">
+                    <div className="relative group rounded-3xl overflow-hidden shadow-inner border-4 border-gray-50">
+                        <img src={prescriptionPreview} className="w-full h-72 object-contain" />
+                        <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-all"></div>
+                    </div>
+                    <button onClick={analyze} className="w-full py-6 bg-blue-600 text-white font-black text-xl rounded-2xl shadow-2xl shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all">
+                      ANALYZE DOCUMENT
                     </button>
                   </div>
                 )}
 
                 {isAnalyzing && (
-                  <div className="py-20 text-center">
-                    <MorphingSquare size={70} />
-                    <p className="mt-8 text-lg font-medium text-gray-600">Our Llama 4 AI is reading your prescription...</p>
+                  <div className="py-24 text-center">
+                    <MorphingSquare size={80} />
+                    <p className="mt-10 text-xl font-bold text-gray-700">Llama 4 Vision is transcribing...</p>
+                    <p className="text-gray-400 text-sm mt-2">Identifying patient, doctor & medicines</p>
                   </div>
                 )}
 
                 {result && (
-                  <div className="space-y-6">
+                  <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-blue-50 p-4 rounded-2xl">
-                        <div className="text-blue-600 text-xs font-bold mb-1 uppercase">Patient</div>
-                        <div className="font-bold text-gray-900">{result?.patientName || 'Not found'}</div>
+                      <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                        <div className="flex items-center gap-2 text-blue-600 mb-2">
+                          <User size={16} />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Patient</span>
+                        </div>
+                        <div className="font-bold text-gray-900 text-lg">{result?.patientName || 'Unreadable'}</div>
                       </div>
-                      <div className="bg-blue-50 p-4 rounded-2xl">
-                        <div className="text-blue-600 text-xs font-bold mb-1 uppercase">Doctor</div>
-                        <div className="font-bold text-gray-900">{result?.doctorName || 'Not found'}</div>
+                      <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                        <div className="flex items-center gap-2 text-indigo-600 mb-2">
+                          <Stethoscope size={16} />
+                          <span className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Doctor</span>
+                        </div>
+                        <div className="font-bold text-gray-900 text-lg">{result?.doctorName || 'Unreadable'}</div>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-bold text-gray-400 uppercase">Medicines</h4>
-                      {result?.medicines?.map((m, i) => (
-                        <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-100 font-bold">
-                          {typeof m === 'string' ? m : m.name}
-                          <span className="text-xs text-gray-500 block font-normal">{m.dosage || ''} {m.frequency || ''}</span>
-                        </div>
-                      ))}
+                    <div className="space-y-4">
+                      <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Identified Medications</h4>
+                      <div className="grid gap-3">
+                        {result?.medicines?.map((m, i) => (
+                          <div key={i} className="group p-5 bg-white rounded-2xl border-2 border-gray-50 flex items-center justify-between hover:border-blue-100 transition-colors">
+                            <div>
+                              <div className="font-black text-gray-900">{typeof m === 'string' ? m : m.name}</div>
+                              <div className="text-xs text-gray-500 mt-0.5">{m.dosage || ''} • {m.frequency || ''}</div>
+                            </div>
+                            <Clock size={20} className="text-gray-200 group-hover:text-blue-300 transition-colors" />
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="bg-green-50 p-5 rounded-2xl border border-green-100 border-l-8">
-                        <div className="text-[10px] font-bold text-green-600 uppercase">Suggested Department</div>
-                        <div className="font-bold text-green-900 text-lg">
-                          {result?.suggestedDept ? getDepartmentName(result.suggestedDept, lang) : 'General Outreach'}
-                        </div>
+                    <div className="p-6 rounded-3xl bg-green-50 border border-green-100 flex items-center justify-between">
+                         <div>
+                            <div className="text-[10px] font-black text-green-500 uppercase tracking-widest mb-1">Clinic Suggestion</div>
+                            <div className="font-bold text-green-900 text-xl">
+                               {result?.suggestedDept ? getDepartmentName(result.suggestedDept, lang) : 'General OPD'}
+                            </div>
+                         </div>
+                         <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-green-500 shadow-sm border border-green-50">
+                            <ArrowRight size={24} />
+                         </div>
                     </div>
 
                     <div className="pt-2">
                        <button 
                          onClick={handleSmartBooking}
-                         className="w-full py-5 bg-blue-600 text-white font-bold text-lg rounded-2xl shadow-lg flex items-center justify-center gap-4 hover:bg-blue-700"
+                         className="w-full py-6 bg-gray-900 text-white font-black text-xl rounded-2xl shadow-2xl flex items-center justify-center gap-4 hover:bg-black hover:scale-[1.02] transition-all"
                        >
-                         <Calendar size={22} />
-                         Book Follow-up Appointment
+                         <Calendar size={28} />
+                         BOOK FOLLOW-UP APPOINTMENT
                        </button>
-                       <p className="text-center text-[11px] text-gray-400 mt-3 italic">
-                         *Follow-up suggested for {calculateBookingDate()}
+                       <p className="text-center text-[11px] text-gray-400 mt-4 font-medium italic">
+                         *Automated booking set for {calculateBookingDate()}
                        </p>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-          )}
-        </main>
-        <Footer />
-        <WhatsAppButton />
-      </div>
-    );
-
-  } catch (err) {
-    // If we're here, it means something in the component initialization failed (like a context or import)
-    return (
-      <div className="p-10 bg-red-50 text-red-700 min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">Safety Mode: Critical Mount Error</h1>
-        <p className="mb-2">The component failed to initialize rendering logic.</p>
-        <pre className="bg-white p-4 rounded border border-red-200 mt-4 overflow-auto">{err.message}</pre>
-        <button onClick={() => window.location.reload()} className="mt-6 px-6 py-2 bg-red-600 text-white font-bold rounded">Try Refreshing</button>
-      </div>
-    );
-  }
+          </div>
+        )}
+      </main>
+      <Footer />
+      <WhatsAppButton />
+    </div>
+  );
 }
