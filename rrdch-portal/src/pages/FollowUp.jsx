@@ -19,8 +19,7 @@ export default function FollowUp() {
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState(null);
 
-  // Prescription Reader state (Feature 7)
-  const [prescriptionFile, setPrescriptionFile] = useState(null);
+  // Prescription Reader state
   const [prescriptionPreview, setPrescriptionPreview] = useState(null);
   const [isAnalyzingPrescription, setIsAnalyzingPrescription] = useState(false);
   const [prescriptionResult, setPrescriptionResult] = useState(null);
@@ -47,7 +46,6 @@ export default function FollowUp() {
           token,
           ...details
         }));
-        // Sort by bookedAt (newest first)
         appointmentList.sort((a, b) => b.bookedAt - a.bookedAt);
         setAppointments(appointmentList);
       }
@@ -71,15 +69,16 @@ export default function FollowUp() {
     return new Date(timestamp).toLocaleString(lang === 'kn' ? 'kn-IN' : 'en-IN');
   };
 
-  // Prescription Reader handlers (Feature 7)
+  // Prescription Reader Handlers
   const handlePrescriptionUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && file.type.startsWith('image/')) {
-      setPrescriptionFile(file);
+    const file = e.target.files?.[0];
+    if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setPrescriptionPreview(reader.result);
+      reader.onload = () => {
+        setPrescriptionPreview(reader.result);
+        setShowPrescriptionModal(true);
+      };
       reader.readAsDataURL(file);
-      setShowPrescriptionModal(true);
     }
   };
 
@@ -109,304 +108,121 @@ export default function FollowUp() {
   };
 
   const clearPrescription = () => {
-    setPrescriptionFile(null);
     setPrescriptionPreview(null);
     setPrescriptionResult(null);
     setShowPrescriptionModal(false);
   };
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-white">
       <Navbar />
       
       <main className="py-8 md:py-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className={`font-heading font-semibold text-2xl md:text-3xl text-primary mb-2 text-center ${lang === 'kn' ? 'kannada' : ''}`}>
+        <div className="max-w-4xl mx-auto px-4">
+          <h1 className={`font-heading font-semibold text-3xl text-primary mb-2 text-center ${lang === 'kn' ? 'kannada' : ''}`}>
             {t('checkYourAppointment', lang)}
           </h1>
-          <p className="text-text-secondary text-center mb-8">
+          <p className="text-gray-600 text-center mb-8">
             {t('enterRegisteredMobile', lang)}
           </p>
 
-          {/* Search Form */}
-          <div className="card mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" size={20} />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  className="input pl-12"
+                  className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                   placeholder={lang === 'kn' ? '10 ಅಂಕೆಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ' : '10-digit mobile number'}
                 />
               </div>
               <button
                 onClick={handleSearch}
                 disabled={isLoading || phone.length !== 10}
-                className="btn btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
+                className="px-8 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? (
-                  <Loader size={20} className="animate-spin" />
-                ) : (
-                  <Search size={20} />
-                )}
+                {isLoading ? <Loader size={20} className="animate-spin" /> : <Search size={20} />}
                 {t('checkQueue', lang)}
               </button>
             </div>
-
             {error && (
-              <div className="mt-4 p-4 bg-danger/10 text-danger rounded-lg flex items-center gap-2">
-                <AlertCircle size={18} />
+              <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-lg text-sm">
                 {error}
               </div>
             )}
           </div>
 
-          {/* Results */}
-          {hasSearched && !isLoading && (
-            <div>
-              {appointments.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-text-muted/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Calendar className="text-text-muted" size={32} />
-                  </div>
-                  <h2 className="font-heading font-semibold text-xl text-primary mb-2">
-                    {t('noAppointmentsFound', lang)}
-                  </h2>
-                  <p className="text-text-secondary mb-6">
-                    {lang === 'kn' ? 'ನಿಮ್ಮ ದಂತ ಆರೋಗ್ಯಕ್ಕಾಗಿ ಈಗಲೇ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ' : 'Book an appointment now for your dental health'}
-                  </p>
-                  <Link to="/appointment" className="btn btn-accent inline-flex items-center gap-2">
-                    {t('bookOneNow', lang)}
-                    <ArrowRight size={18} />
-                  </Link>
-                </div>
-              ) : (
-                <div>
-                  <h2 className="font-heading font-semibold text-xl text-primary mb-4">
-                    {lang === 'kn' ? 'ನಿಮ್ಮ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು' : 'Your Appointments'}
-                  </h2>
-                  <div className="space-y-4">
-                    {appointments.map((apt) => (
-                      <div key={apt.token} className="card">
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <span className="text-2xl font-heading font-bold text-accent">
-                                {apt.token}
-                              </span>
-                              <span className="px-3 py-1 bg-accent/10 text-accent rounded-full text-sm font-medium">
-                                {lang === 'kn' ? 'ದೃಢಪಟ್ಟಿದೆ' : 'Confirmed'}
-                              </span>
-                            </div>
-                            <p className={`font-semibold text-primary ${lang === 'kn' ? 'kannada' : ''}`}>
-                              {apt.departmentName}
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-text-secondary mt-2">
-                              <span className="flex items-center gap-1">
-                                <Calendar size={14} />
-                                {formatDate(apt.date)}
-                              </span>
-                              <span>
-                                {lang === 'kn' ? 'ಬುಕ್ ಮಾಡಿದ್ದು: ' : 'Booked: '}
-                                {formatDateTime(apt.bookedAt)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0">
-                            <WhatsAppButton
-                              phone={phone}
-                              token={apt.token}
-                              department={apt.departmentName}
-                              date={formatDate(apt.date)}
-                              lang={lang}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+          <div className="p-8 border-2 border-dashed border-[var(--accent)]/30 rounded-2xl text-center">
+            <div className="w-16 h-16 bg-[var(--accent)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FileText className="text-[var(--accent)]" size={32} />
             </div>
-          )}
+            <h3 className="font-heading font-semibold text-xl mb-2">
+              {lang === 'kn' ? 'AI ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದುಗ' : 'AI Prescription Reader'}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {lang === 'kn' ? 'ನಿಮ್ಮ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Upload your prescription - AI reads it!'}
+            </p>
 
-          {/* AI Prescription Reader Section (Feature 7) */}
-          <div className="card mt-8 border-2 border-dashed border-[var(--accent)]/30">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[var(--accent)]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="text-[var(--accent)]" size={32} />
-              </div>
-              <h3 className={`font-heading font-semibold text-xl text-[var(--primary)] mb-2 ${lang === 'kn' ? 'kannada' : ''}`}>
-                {lang === 'kn' ? 'AI ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದುಗ' : 'AI Prescription Reader'}
-              </h3>
-              <p className="text-[var(--text2)] mb-4">
-                {lang === 'kn' 
-                  ? 'ನಿಮ್ಮ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ - AI ಬುದ್ಧಿವಂತವಾಗಿ ಔಷಧಿ ಮತ್ತು ನಿರ್ದೇಶನಗಳನ್ನು ಓದುತ್ತದೆ' 
-                  : 'Upload your prescription - AI intelligently reads medicines and instructions'}
-              </p>
-
-              {/* Upload Button */}
-              <label className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-semibold rounded-lg transition-colors cursor-pointer">
-                <Upload size={18} />
-                {lang === 'kn' ? 'ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Upload Prescription'}
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handlePrescriptionUpload}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-[var(--text3)] mt-3">
-                {lang === 'kn' 
-                  ? 'ಗುಣಮಟದ ಫಲಿತಾಂಶಗಳಿಗೆ ಸ್ಪಷ್ಟ ಫೋಟೋವನ್ನು ಕಳುಹಿಸಿ' 
-                  : 'Send clear photo for best results'}
-              </p>
-            </div>
+            <label className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--accent)] text-white font-semibold rounded-lg cursor-pointer">
+              <Upload size={18} />
+              {lang === 'kn' ? 'ಅಪ್‌ಲೋಡ್ ಮಾಡಿ' : 'Upload Prescription'}
+              <input type="file" accept="image/*" onChange={handlePrescriptionUpload} className="hidden" />
+            </label>
           </div>
 
-          {/* Prescription Analysis Modal */}
+          {/* Modal */}
           {showPrescriptionModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-              <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-heading font-semibold text-xl text-[var(--primary)]">
-                    {lang === 'kn' ? 'ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ವಿಶ್ಲೇಷಣೆ' : 'Prescription Analysis'}
-                  </h3>
-                  <button onClick={clearPrescription} className="p-2 hover:bg-gray-100 rounded-full">
-                    <X size={20} />
-                  </button>
+            <div className="fixed inset-0 z-[999] bg-black/60 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+                <div className="flex justify-between mb-4">
+                  <h3 className="text-xl font-bold">Analysis</h3>
+                  <button onClick={clearPrescription}><X size={24}/></button>
                 </div>
 
-                {/* Preview Image */}
-                {prescriptionPreview && (
-                  <div className="mb-4 rounded-lg overflow-hidden border border-[var(--border)]">
-                    <img 
-                      src={prescriptionPreview} 
-                      alt="Prescription preview" 
-                      className="w-full max-h-64 object-contain"
-                    />
-                  </div>
+                {prescriptionPreview && !prescriptionResult && (
+                  <img src={prescriptionPreview} className="w-full max-h-64 object-contain rounded-lg mb-4" />
                 )}
 
-                {/* Analyze Button or Loading */}
                 {!prescriptionResult && !isAnalyzingPrescription && (
-                  <button
-                    onClick={analyzePrescription}
-                    className="w-full py-3 bg-[var(--accent)] hover:bg-[var(--accent)]/90 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Sparkles size={18} />
+                  <button onClick={analyzePrescription} className="w-full py-4 bg-[var(--accent)] text-white font-bold rounded-xl">
                     {lang === 'kn' ? 'ವಿಶ್ಲೇಷಿಸು' : 'Analyze Prescription'}
                   </button>
                 )}
 
                 {isAnalyzingPrescription && (
-                  <div className="text-center py-8">
+                  <div className="text-center py-12">
                     <MorphingSquare size={60} />
-                    <p className="text-[var(--text2)] mt-4">
-                      {lang === 'kn' ? 'ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದಲಾಗುತ್ತಿದೆ...' : 'Reading prescription...'}
-                    </p>
+                    <p className="mt-4">Reading...</p>
                   </div>
                 )}
 
-                {/* Analysis Results */}
                 {prescriptionResult && (
                   <div className="space-y-4">
-                    {/* Error or Empty Result Fallback */}
-                    {(prescriptionResult.error || (!prescriptionResult.medicines?.length && !prescriptionResult.instructions && !prescriptionResult.doctorName)) && (
-                      <div className="text-center py-6 px-4 bg-orange-50 rounded-xl border border-dashed border-orange-300">
-                        <p className="text-sm text-orange-800 font-medium mb-1">
-                          {lang === 'kn' ? 'ಮಾಹಿತಿ ಲಭ್ಯವಿಲ್ಲ' : 'No Data Found'}
-                        </p>
-                        <p className="text-xs text-orange-600">
-                          {lang === 'kn' 
-                            ? 'ಕ್ಷಮಿಸಿ, ಈ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್ ಓದಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಸ್ಪಷ್ಟವಾದ ಫೋಟೋ ಬಳಸಿ.' 
-                            : 'We could not reliably extract medicines from this image. Please ensure the photo is clear and well-lit.'}
-                        </p>
-                        {prescriptionResult.raw && (
-                          <div className="mt-4 p-2 bg-white/50 rounded text-[10px] text-gray-400 text-left max-h-24 overflow-auto font-mono">
-                            AI RAW: {typeof prescriptionResult.raw === 'string' ? prescriptionResult.raw.substring(0, 200) : JSON.stringify(prescriptionResult.raw).substring(0, 200)}...
-                          </div>
-                        )}
-
-                        {/* Diagnostic Toggle */}
-                        <div className="mt-4 pt-4 border-t border-orange-200">
-                          <details className="text-left">
-                            <summary className="text-[10px] text-orange-400 cursor-pointer hover:underline uppercase tracking-widest font-bold">
-                              View Diagnostic Details
-                            </summary>
-                            <div className="mt-2 p-2 bg-black/5 rounded font-mono text-[10px] text-orange-900 border border-orange-200/50 break-all">
-                              <p className="font-bold mb-1">Response JSON:</p>
-                              <pre className="whitespace-pre-wrap">
-                                {JSON.stringify(prescriptionResult, null, 2)}
-                              </pre>
-                            </div>
-                          </details>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Medicines Section */}
-                    {Array.isArray(prescriptionResult.medicines) && prescriptionResult.medicines.length > 0 && (
-                      <div className="bg-[var(--surface)] rounded-lg p-4">
-                        <h4 className="font-semibold text-[var(--primary)] mb-3">
-                          {lang === 'kn' ? '💊 ಔಷಧಿಗಳು' : '💊 Medicines'}
-                        </h4>
+                    {prescriptionResult.medicines?.length > 0 ? (
+                      <div className="bg-gray-50 p-4 rounded-xl">
+                        <h4 className="font-bold text-[var(--accent)] mb-2">Medicines</h4>
                         <ul className="space-y-2">
-                          {prescriptionResult.medicines.map((med, idx) => (
-                            <li key={idx} className="text-sm text-[var(--text2)] p-3 bg-white rounded-lg border-l-4 border-[var(--accent)] shadow-sm">
-                              <div className="font-bold text-[var(--primary)]">{typeof med === 'string' ? med : med.name}</div>
-                              {typeof med !== 'string' && (med.dosage || med.frequency) && (
-                                <div className="text-xs text-[var(--text3)] mt-1">
-                                  {med.dosage} {med.dosage && med.frequency && '•'} {med.frequency}
-                                </div>
-                              )}
+                          {prescriptionResult.medicines.map((m, i) => (
+                            <li key={i} className="p-3 bg-white border-l-4 border-[var(--accent)] rounded shadow-sm">
+                              <span className="font-bold">{typeof m === 'string' ? m : m.name}</span>
+                              {m.dosage && <span className="text-gray-500 text-xs ml-2">{m.dosage}</span>}
                             </li>
                           ))}
                         </ul>
                       </div>
-                    )}
-
-                    {/* Instructions Section */}
-                    {prescriptionResult.instructions && (
-                      <div className="bg-[var(--surface)] rounded-lg p-4">
-                        <h4 className="font-semibold text-[var(--primary)] mb-3">
-                          {lang === 'kn' ? '📋 ನಿರ್ದೇಶನಗಳು' : '📋 Instructions'}
-                        </h4>
-                        <p className="text-sm text-[var(--text2)] whitespace-pre-wrap">
-                          {prescriptionResult.instructions}
-                        </p>
+                    ) : (
+                      <div className="p-6 bg-orange-50 rounded-xl text-center">
+                        <p className="font-bold text-orange-800">No Data Found</p>
+                        <details className="mt-4">
+                           <summary className="text-[10px] cursor-pointer">Diagnostics</summary>
+                           <pre className="text-[8px] mt-2 whitespace-pre-wrap">{JSON.stringify(prescriptionResult, null, 2)}</pre>
+                        </details>
                       </div>
                     )}
 
-                    {/* Doctor Name */}
-                    {prescriptionResult.doctorName && (
-                      <div className="bg-[var(--surface)] rounded-lg p-4">
-                        <h4 className="font-semibold text-[var(--primary)] mb-1">
-                          {lang === 'kn' ? '👨‍⚕️ ವೈದ್ಯರು' : '👨‍⚕️ Doctor'}
-                        </h4>
-                        <p className="text-sm text-[var(--text2)]">{prescriptionResult.doctorName}</p>
-                      </div>
-                    )}
-
-                    {/* Disclaimer */}
-                    <div className="p-3 bg-warning/10 rounded-lg">
-                      <p className="text-xs text-[var(--text3)]">
-                        {lang === 'kn' 
-                          ? '⚠️ AI ಅನುಮಾನಗಳಿರುವ ಪದಗಳನ್ನು ಹೊರತರಿಸುತ್ತದೆ. ಸಂದೇಹವಿದ್ದರೆ ಮೂಲ ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್‌ನೊಂದಿಗೆ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.' 
-                          : '⚠️ AI flags uncertain words. Contact doctor with original prescription if in doubt.'}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={clearPrescription}
-                      className="w-full py-3 border-2 border-[var(--primary)] text-[var(--primary)] font-semibold rounded-lg transition-colors"
-                    >
-                      {lang === 'kn' ? 'ಮುಚ್ಚು' : 'Close'}
-                    </button>
+                    <button onClick={clearPrescription} className="w-full py-3 border border-gray-300 rounded-lg">Close</button>
                   </div>
                 )}
               </div>
@@ -414,7 +230,6 @@ export default function FollowUp() {
           )}
         </div>
       </main>
-
       <Footer />
     </div>
   );
